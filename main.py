@@ -1,16 +1,58 @@
+import sqlite3
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler
 
 # Your bot token
 TOKEN = '8069191344:AAFWYeQuXct6ZXcvTcajBFd95XzBJCW6y8o'
 
-# List of resources, mapping buttons to file names
-resources = {
-    'Math PPT': 'math_presentation.pptx',
-    'Physics PDF': 'physics_notes.pdf',
-    'Chemistry PPT': 'chemistry_intro.pptx'
-}
+# Initialize SQLite database
+def init_db():
+    conn = sqlite3.connect('resources.db')
+    c = conn.cursor()
+    
+    # Create table for resources
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS resources (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT UNIQUE NOT NULL,
+            file_path TEXT NOT NULL
+        )
+    ''')
+    
+    # Insert some sample data
+    sample_data = [
+        ('Math PPT', 'math_presentation.pptx'),
+        ('Physics PDF', 'physics_notes.pdf'),
+        ('Chemistry PPT', 'chemistry_intro.pptx')
+    ]
+    try:
+        c.executemany('INSERT INTO resources (name, file_path) VALUES (?, ?)', sample_data)
+    except sqlite3.IntegrityError:
+        # Ignore if data already exists
+        pass
+    
+    conn.commit()
+    conn.close()
 
+# Fetch resources from the SQLite database
+def get_resources():
+    conn = sqlite3.connect('resources.db')
+    c = conn.cursor()
+    c.execute("SELECT name FROM resources")
+    resources = c.fetchall()
+    conn.close()
+    return [resource[0] for resource in resources]
+
+# Fetch the file path for a given resource
+def get_resource_file_path(name):
+    conn = sqlite3.connect('resources.db')
+    c = conn.cursor()
+    c.execute("SELECT file_path FROM resources WHERE name=?", (name,))
+    file_path = c.fetchone()
+    conn.close()
+    return file_path[0] if file_path else None
+
+# Command to display welcome message
 async def welcome(update: Update, context):
     welcome_message = (
         "Hello! Welcome to the Resource Bot.\n\n"
@@ -28,22 +70,14 @@ async def about(update: Update, context):
     )
     await update.message.reply_text(about_message)
 
- # Define a custom reply keyboard with /welcome and /about
-    custom_keyboard = [
-        ['/welcome', '/about']  # Buttons for welcome and about commands
-    ]
-    reply_markup = ReplyKeyboardMarkup(custom_keyboard, resize_keyboard=True)
-    
-    # Send the message with the keyboard
-    await update.message.reply_text(
-        "Welcome! Choose an option below:",
-        reply_markup=reply_markup
-    )
-
-# Start command to display buttons
+# Start command to display resource buttons
 async def start(update: Update, context):
-    keyboard = [[InlineKeyboardButton(resource, callback_data=resource) for resource in resources]]
+    # Get resources from the database
+    resource_names = get_resources()
+    keyboard = [[InlineKeyboardButton(resource, callback_data=resource) for resource in resource_names]]
     reply_markup = InlineKeyboardMarkup(keyboard)
+    
+    # Display the buttons
     await update.message.reply_text("Choose a resource to download:", reply_markup=reply_markup)
 
 # Function to handle button presses and send files
@@ -51,8 +85,8 @@ async def button(update: Update, context):
     query = update.callback_query
     resource_name = query.data
     
-    # Send the appropriate resource
-    file_path = resources.get(resource_name)
+    # Get the file path from the database
+    file_path = get_resource_file_path(resource_name)
     if file_path:
         await query.answer()
         with open(file_path, 'rb') as file:
@@ -62,6 +96,9 @@ async def button(update: Update, context):
 
 # Main function to set up the bot
 def main():
+    # Initialize the database
+    init_db()
+    
     # Create an application object with your bot's token
     application = Application.builder().token(TOKEN).build()
 
