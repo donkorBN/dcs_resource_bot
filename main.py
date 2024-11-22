@@ -1,66 +1,50 @@
-import asyncio
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import (
-    Application,
-    CommandHandler,
-    CallbackQueryHandler,
-    ContextTypes,
-)
+from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, MessageHandler, filters
 
-# In-memory resource storage (for production, replace with a database)
+# Your bot token
+TOKEN = '8069191344:AAFWYeQuXct6ZXcvTcajBFd95XzBJCW6y8o'
+
+# List of resources, mapping buttons to file names
 resources = {
-    "pdf": [],
-    "ppt": []
+    'Math PPT': 'math_presentation.pptx',
+    'Physics PDF': 'physics_notes.pdf',
+    'Chemistry PPT': 'chemistry_intro.pptx'
 }
 
-# Command to start the bot
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    await update.message.reply_text(
-        "Welcome to the Resource Bot!\n"
-        "Use /resources to access stored resources."
-    )
-
-# Command to list resources
-async def resources_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    keyboard = [
-        [InlineKeyboardButton("PDFs", callback_data='pdf')],
-        [InlineKeyboardButton("PPTs", callback_data='ppt')],
-    ]
+# Start command to display buttons
+def start(update: Update, context):
+    keyboard = [[InlineKeyboardButton(resource, callback_data=resource) for resource in resources]]
     reply_markup = InlineKeyboardMarkup(keyboard)
-    await update.message.reply_text("Select a resource category:", reply_markup=reply_markup)
+    update.message.reply_text("Choose a resource to download:", reply_markup=reply_markup)
 
-# Handle resource retrieval
-async def resource_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+# Function to handle button presses and send files
+def button(update: Update, context):
     query = update.callback_query
-    await query.answer()
-
-    category = query.data
-    if resources[category]:
-        for resource in resources[category]:
-            await query.message.reply_document(
-                document=resource["file_id"],
-                caption=resource["file_name"]
-            )
+    resource_name = query.data
+    
+    # Send the appropriate resource
+    file_path = resources.get(resource_name)
+    if file_path:
+        query.answer()
+        context.bot.send_document(chat_id=query.message.chat_id, document=open(file_path, 'rb'))
     else:
-        await query.message.reply_text(f"No {category.upper()} resources available.")
+        query.answer('Resource not found.')
 
-# Main function to run the bot
-async def main() -> None:
-    token = "8069191344:AAFWYeQuXct6ZXcvTcajBFd95XzBJCW6y8o"  # Replace with your bot token
+# Main function to set up the bot
+def main():
+    # Create an updater object with your bot's token
+    updater = Updater(TOKEN, use_context=True)
 
-    # Create the application
-    application = Application.builder().token(token).build()
+    # Get the dispatcher to register handlers
+    dispatcher = updater.dispatcher
 
-    # Add command handlers
-    application.add_handler(CommandHandler("start", start))
-    application.add_handler(CommandHandler("resources", resources_command))
+    # Register handlers
+    dispatcher.add_handler(CommandHandler('start', start))
+    dispatcher.add_handler(CallbackQueryHandler(button))
 
-    # Add callback handler
-    application.add_handler(CallbackQueryHandler(resource_callback))
+    # Start the bot
+    updater.start_polling()
+    updater.idle()
 
-    # Run the bot
-    print("Bot is running!")
-    await application.run_polling()
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
