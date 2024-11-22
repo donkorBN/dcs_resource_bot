@@ -11,6 +11,23 @@ resources = {
     'Chemistry PPT': 'chemistry_intro.pptx'
 }
 
+async def welcome(update: Update, context):
+    welcome_message = (
+        "Hello! Welcome to the Resource Bot.\n\n"
+        "You can download various educational resources like PPTs and PDFs here. "
+        "Use the /start command to see the list of resources available for download."
+    )
+    await update.message.reply_text(welcome_message)
+
+# Command to display about information
+async def about(update: Update, context):
+    about_message = (
+        "This is a simple bot that allows you to download educational resources.\n\n"
+        "It supports multiple resource categories like Math, Science, and more. "
+        "The bot is powered by Python and uses SQLite to manage resources."
+    )
+    await update.message.reply_text(about_message)
+
 # Start command to display buttons
 async def start(update: Update, context):
     keyboard = [[InlineKeyboardButton(resource, callback_data=resource) for resource in resources]]
@@ -39,6 +56,8 @@ def main():
     # Register handlers
     application.add_handler(CommandHandler('start', start))
     application.add_handler(CallbackQueryHandler(button))
+    application.add_handler(CommandHandler('welcome', welcome))  # Welcome command
+    application.add_handler(CommandHandler('about', about))  # About command
 
     # Start the bot
     application.run_polling()
