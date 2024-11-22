@@ -46,7 +46,7 @@ async def resource_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) 
 
 # Main function to run the bot
 async def main() -> None:
-    token = "YOUR_BOT_TOKEN"  # Replace with your bot token
+    token = "8069191344:AAFWYeQuXct6ZXcvTcajBFd95XzBJCW6y8o"  # Replace with your bot token
 
     # Create the application
     application = Application.builder().token(token).build()
@@ -63,13 +63,4 @@ async def main() -> None:
     await application.run_polling()
 
 if __name__ == "__main__":
-    try:
-        # Check if an event loop is already running
-        loop = asyncio.get_running_loop()
-    except RuntimeError:
-        # No event loop is running; create a new one
-        asyncio.run(main())
-    else:
-        # If an event loop is running, use it
-        loop.create_task(main())
-        loop.run_forever()
+    main()
