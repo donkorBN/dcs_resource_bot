@@ -59,8 +59,17 @@ async def main() -> None:
     application.add_handler(CallbackQueryHandler(resource_callback))
 
     # Run the bot
+    print("Bot is running!")
     await application.run_polling()
 
 if __name__ == "__main__":
-    # Use asyncio to run the bot
-    asyncio.run(main())
+    try:
+        # Check if an event loop is already running
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        # No event loop is running; create a new one
+        asyncio.run(main())
+    else:
+        # If an event loop is running, use it
+        loop.create_task(main())
+        loop.run_forever()
