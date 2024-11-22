@@ -1,4 +1,4 @@
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler
 
 # Your bot token
@@ -27,6 +27,18 @@ async def about(update: Update, context):
         "The bot is powered by Python and uses SQLite to manage resources."
     )
     await update.message.reply_text(about_message)
+
+ # Define a custom reply keyboard with /welcome and /about
+    custom_keyboard = [
+        ['/welcome', '/about']  # Buttons for welcome and about commands
+    ]
+    reply_markup = ReplyKeyboardMarkup(custom_keyboard, resize_keyboard=True)
+    
+    # Send the message with the keyboard
+    await update.message.reply_text(
+        "Welcome! Choose an option below:",
+        reply_markup=reply_markup
+    )
 
 # Start command to display buttons
 async def start(update: Update, context):
