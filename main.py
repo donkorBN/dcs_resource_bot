@@ -19,6 +19,19 @@ async def welcome(update: Update, context):
     )
     await update.message.reply_text(welcome_message)
 
+async def start(update: Update, context):
+    start_message = (
+
+        custom_keyboard = [
+        ['/welcome', '/about', '/start']  # Buttons for welcome and about commands
+    ]
+    reply_markup = ReplyKeyboardMarkup(custom_keyboard, resize_keyboard=True)
+    
+    # Send the message with the keyboard
+    await update.message.reply_text(
+        "Welcome! Choose an option below:",
+        reply_markup=reply_markup
+    ))
 # Command to display about information
 async def about(update: Update, context):
     about_message = (
