@@ -1,4 +1,5 @@
 from pymongo import MongoClient
+from py_compile import compile
 
 # Connect to MongoDB (Replace <connection_string> with your MongoDB connection string)
 client = MongoClient('mongosh "mongodb+srv://resource-bot.36rxl.mongodb.net/" --apiVersion 1 --username emmanuelaltitude89')  # Use 'mongodb://localhost:27017/' for local MongoDB
