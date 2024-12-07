@@ -13,4 +13,3 @@ sample_resources = [
 ]
 resources_collection.insert_many(sample_resources)  # Add resources to the database
 
-print("Sample resources added successfully!")
